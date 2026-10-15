@@ -1,0 +1,219 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Portal</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eaf0f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .box {
+            background: white;
+            padding: 30px;
+            width: 320px;
+            max-width: calc(100% - 60px);
+            text-align: center;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px #0002;
+        }
+
+        h2 {
+            color: #174ea6;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            background: #174ea6;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #103778;
+        }
+
+        #message {
+            color: red;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Login Page -->
+    <div class="box" id="loginPage">
+        <h2>College Portal</h2>
+        <p>Login to your account</p>
+
+        <form id="loginForm">
+            <input type="text" id="username"
+                   placeholder="Username" required>
+
+            <input type="password" id="password"
+                   placeholder="Password" required>
+
+            <select id="role">
+                <option value="student">Student</option>
+                <option value="admin">Admin</option>
+            </select>
+
+            <button type="submit">Login</button>
+        </form>
+
+        <p id="message"></p>
+
+        <small>Admin: admin / admin123</small><br>
+        <small>Student: student / stu123</small>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div class="box hidden" id="adminPage">
+        <h2>Admin Dashboard</h2>
+        <p>Welcome, Admin!</p>
+        <p>Manage students, courses and college details.</p>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Student Dashboard -->
+    <div class="box hidden" id="studentPage">
+        <h2>Student Dashboard</h2>
+        <p id="welcome"></p>
+        <p>View attendance, marks and course details.</p>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <script>
+        // Create default login accounts
+        if (!localStorage.getItem("collegeUsers")) {
+            const users = [
+                {
+                    username: "admin",
+                    password: "admin123",
+                    role: "admin"
+                },
+                {
+                    username: "student",
+                    password: "stu123",
+                    role: "student"
+                }
+            ];
+
+            localStorage.setItem(
+                "collegeUsers",
+                JSON.stringify(users)
+            );
+        }
+
+        const loginPage = document.getElementById("loginPage");
+        const adminPage = document.getElementById("adminPage");
+        const studentPage = document.getElementById("studentPage");
+
+        // Show the appropriate dashboard
+        function showDashboard(user) {
+            loginPage.classList.add("hidden");
+            adminPage.classList.add("hidden");
+            studentPage.classList.add("hidden");
+
+            if (user.role === "admin") {
+                adminPage.classList.remove("hidden");
+            } else if (user.role === "student") {
+                studentPage.classList.remove("hidden");
+                document.getElementById("welcome").textContent =
+                    "Welcome, " + user.username + "!";
+            } else {
+                loginPage.classList.remove("hidden");
+            }
+        }
+
+        // Login authentication
+        document.getElementById("loginForm")
+            .addEventListener("submit", function(event) {
+                event.preventDefault();
+
+                const username =
+                    document.getElementById("username").value.trim();
+
+                const password =
+                    document.getElementById("password").value;
+
+                const role =
+                    document.getElementById("role").value;
+
+                const users = JSON.parse(
+                    localStorage.getItem("collegeUsers") || "[]"
+                );
+
+                const user = users.find(function(u) {
+                    return u.username === username &&
+                           u.password === password &&
+                           u.role === role;
+                });
+
+                if (user) {
+                    const session = {
+                        username: user.username,
+                        role: user.role
+                    };
+
+                    localStorage.setItem(
+                        "loggedInUser",
+                        JSON.stringify(session)
+                    );
+
+                    document.getElementById("message").textContent = "";
+                    showDashboard(session);
+                } else {
+                    document.getElementById("message").textContent =
+                        "Invalid username, password, or role!";
+                }
+            });
+
+        // Logout
+        function logout() {
+            localStorage.removeItem("loggedInUser");
+
+            loginPage.classList.remove("hidden");
+            adminPage.classList.add("hidden");
+            studentPage.classList.add("hidden");
+
+            document.getElementById("loginForm").reset();
+            document.getElementById("message").textContent = "";
+        }
+
+        // Restore login session after page refresh
+        const savedUser = JSON.parse(
+            localStorage.getItem("loggedInUser") || "null"
+        );
+
+        if (savedUser &&
+            (savedUser.role === "admin" ||
+             savedUser.role === "student")) {
+            showDashboard(savedUser);
+        }
+    </script>
+
+</body>
+</html>
